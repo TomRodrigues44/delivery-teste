@@ -1,0 +1,89 @@
+{
+  "Salgados": [
+    {
+      "nome": "Copo P - 10 unidades",
+      "sabores": [
+        "Coxinha de Frango",
+        "Croquete de Queijo/Presunto",
+        "Bolinha de Pizza",
+        "Travesseirinho de Carne",
+        "Churros"
+      ],
+      "preco": 12.00
+    },
+    {
+      "nome": "Copo M - 20 unidades",
+      "sabores": [
+        "Coxinha de Frango",
+        "Croquete de Queijo/Presunto",
+        "Bolinha de Pizza",
+        "Travesseirinho de Carne",
+        "Churros"
+      ],
+      "preco": 22.00
+    },
+    {
+      "nome": "Copo G - 30 unidades",
+      "sabores": [
+        "Coxinha de Frango",
+        "Croquete de Queijo/Presunto",
+        "Bolinha de Pizza",
+        "Travesseirinho de Carne",
+        "Churros"
+      ],
+      "preco": 30.00
+    },
+    {
+      "nome": "Meio Cento - 50 unidades",
+      "sabores": [
+        "Coxinha de Frango",
+        "Croquete de Queijo/Presunto",
+        "Bolinha de Pizza",
+        "Travesseirinho de Carne",
+        "Churros"
+      ],
+      "preco": 45.00
+    },
+    {
+      "nome": "Cento - 100 unidades",
+      "sabores": [
+        "Coxinha de Frango",
+        "Croquete de Queijo/Presunto",
+        "Bolinha de Pizza",
+        "Travesseirinho de Carne",
+        "Churros"
+      ],
+      "preco": 85.00
+    }
+  ],
+  "Bolos": [
+    {
+      "nome": "Bolo de Chocolate (1kg)",
+      "preco": 30.00
+    },
+    {
+      "nome": "Bolo de Cenoura (1kg)",
+      "preco": 28.00
+    }
+  ],
+  "Brigadeiros": [
+    {
+      "nome": "Caixa 10 Brigadeiros",
+      "preco": 15.00
+    },
+    {
+      "nome": "Caixa 20 Brigadeiros",
+      "preco": 28.00
+    }
+  ],
+  "Bebidas": [
+    {
+      "nome": "Coca-Cola (Lata)",
+      "preco": 6.00
+    },
+    {
+      "nome": "Guaraná (Lata)",
+      "preco": 5.00
+    }
+  ]
+}

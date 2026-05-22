@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Empório das Coxinhas - Delivery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="assets/img/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <header>
+    <img src="assets/img/logo-emporio.png" alt="Empório das Coxinhas" class="logo-oficial" />
+    <h2 class="slogan">Aqui tem a melhor coxinha da cidade!</h2>
+    <div class="promocao-banner" id="promocao-banner">
+      <strong>LOJA 1 - </strong>Av. Santos Dumont nº 1064-A, Aparecida. Fone:(95)99155-0102.<br>
+⏰ Funcionamos de segunda a sexta, das 08h às 10h15 e das 13h30 às 18h45. E aos sábados de 13h30 às 18h45
+    </div>
+  </header>
+  <nav class="menu-categorias" id="menu-categorias">
+    <a href="#salgados-section">Salgados</a>
+    <a href="#bolos-section">Bolos</a>
+    <a href="#brigadeiros-section">Brigadeiros</a>
+    <a href="#bebidas-section">Bebidas</a>
+  </nav>
+  <div id="aviso-fechado" style="display:none; background: #ffd1d1; color: #8b0000; font-weight:bold;     padding:10px 20px; text-align:center;">
+    Estamos fora do horário de atendimento, por favor, retorne no horario comercial, agradecemos a preferencia!
+  </div>
+  <main>
+    <section class="categoria" id="salgados-section">
+      <h2>Salgados</h2>
+      <div class="produtos-categoria" id="salgados-list"></div>
+    </section>
+    <section class="categoria" id="bolos-section">
+      <h2>Bolos</h2>
+      <div class="produtos-categoria" id="bolos-list"></div>
+    </section>
+    <section class="categoria" id="brigadeiros-section">
+      <h2>Brigadeiros</h2>
+      <div class="produtos-categoria" id="brigadeiros-list"></div>
+    </section>
+    <section class="categoria" id="bebidas-section">
+      <h2>Bebidas</h2>
+      <div class="produtos-categoria" id="bebidas-list"></div>
+    </section>
+  </main>
+
+  <!-- Carrinho lateral (sidebar) -->
+  <div id="carrinho-sidebar" class="carrinho-sidebar">
+    <div class="carrinho-header">
+      <span>Carrinho</span>
+      <button class="close-carrinho" onclick="toggleCarrinho(false)">×</button>
+    </div>
+    <div id="carrinho-itens" class="carrinho-itens"></div>
+    <div class="carrinho-total" id="carrinho-total">Subtotal: R$ 0,00</div>
+    <button class="finalizar-btn" onclick="abrirCheckout()">Finalizar Pedido</button>
+  </div>
+  <!-- Ícone de carrinho (desktop) -->
+  <div class="carrinho-fab" id="carrinho-fab" onclick="toggleCarrinho()">
+    <img src="assets/img/carrinho.png" width="36" />
+    <span id="carrinho-qtd">0</span>
+  </div>
+  <!-- Barra carrinho mobile -->
+  <div class="carrinho-mobile" id="carrinho-mobile" onclick="toggleCarrinho(true)">
+    <span>🛒 Carrinho</span> <span id="carrinho-qtd-mob">(0)</span> <span id="carrinho-total-mob"></span>
+  </div>
+
+  <!-- Modal de seleção de sabores (nova versão) -->
+  <div id="modal-sabores" class="modal-bg" style="display:none;">
+    <div class="modal-content">
+      <h3 id="modal-produto-nome"></h3>
+      <form id="modal-form-sabores">
+        <div style="margin-bottom:15px;">Escolha até 5 unidades (pode repetir sabores):</div>
+        <div id="modal-sabores-lista"></div>
+        <div class="modal-buttons">
+          <button type="button" id="modal-cancelar">Cancelar</button>
+          <button type="button" id="modal-adicionar">Adicionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de checkout -->
+  <div id="modal-checkout" class="modal-bg" style="display:none;">
+    <div class="modal-content modal-checkout">
+      <h3>Finalizar Pedido</h3>
+      <form id="form-checkout" onsubmit="return false;">
+        <input type="text" id="nomeCliente" placeholder="Nome" required>
+        <input type="tel" id="telCliente" placeholder="Telefone" required maxlength="15">
+        <input type="text" id="enderecoCliente" placeholder="Endereço de Entrega" required>
+        <input type="text" id="bairroCliente" placeholder="Bairro" list="lista-bairros" autocomplete="off" required oninput="atualizaTaxa()">
+        <datalist id="lista-bairros"></datalist>
+<!-- Forma de pagamento -->
+<label for="formaPagamento">Forma de Pagamento:</label>
+<select id="formaPagamento" required style="width: 96%; padding: 9px; margin: 5px 0 7px 0; border-radius: 7px; border: 1px solid #ffd49a; font-size: 1.07em;">
+  <option value="">Selecione a forma de pagamento</option>
+  <option value="Pix">Pix</option>
+  <option value="Cartão (na entrega)">Cartão (na entrega)</option>
+  <option value="Dinheiro">Dinheiro</option>
+</select>
+
+<div id="campoTroco" style="display:none;">
+  <input type="number" id="valorTroco" placeholder="Precisa de troco para quanto?" 
+    style="width: 96%; padding: 9px; margin: 5px 0 7px 0; border-radius: 7px; border: 1px solid #ffd49a; font-size: 1.07em;" 
+    min="0" step="0.01">
+</div>
+
+<textarea id="observacaoCliente" placeholder="Observações (opcional)" rows="3"
+  style="width: 96%; padding: 9px; margin: 5px 0 7px 0; border-radius: 7px; border: 1px solid #ffd49a; font-size: 1.07em;"></textarea>
+
+        <div id="info-taxa">Taxa de entrega: R$ <span id="valor-taxa">0,00</span></div>
+        <div id="total-checkout">Total: R$ <span id="valor-total-final">0,00</span></div>
+        <div class="modal-buttons">
+          <button type="button" onclick="fecharCheckout()">Cancelar</button>
+          <button type="button" id="btn-enviar-pedido">Enviar Pedido</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Botão WhatsApp flutuante -->
+  <a href="https://wa.me/5595991550102" target="_blank" class="zap-flutuante" id="zap-flutuante">
+    <img src="https://cdn.jsdelivr.net/gh/edent/SuperTinyIcons/images/svg/whatsapp.svg" width="36" height="36" alt="WhatsApp" />
+    Tira Dúvidas!
+  </a>
+  <footer>
+    <p>&copy; 2025 Empório das Coxinhas. Todos os direitos reservados.</p>
+  </footer>
+  <script src="js/main_aparecida.js"></script>
+</body>
+</html>

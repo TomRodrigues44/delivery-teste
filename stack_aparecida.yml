@@ -1,0 +1,24 @@
+### stack_aparecida.yml
+version: "3.8"
+
+services:
+  web_aparecida:
+    image: nginx:alpine
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.delivery-aparecida.rule=Host(`delivery-aparecida.emporiodascoxinhas.com.br`)"
+      - "traefik.http.routers.delivery-aparecida.entrypoints=websecure"
+      - "traefik.http.routers.delivery-aparecida.tls=true"
+      - "traefik.http.routers.delivery-aparecida.tls.certresolver=letsencrypt"
+      - "traefik.http.services.web_aparecida.loadbalancer.server.port=80"
+    deploy:
+      restart_policy:
+        condition: any
+    volumes:
+      - /var/www/delivery-aparecida:/usr/share/nginx/html:ro
+    networks:
+      - projetonet2
+
+networks:
+  projetonet2:
+    external: true

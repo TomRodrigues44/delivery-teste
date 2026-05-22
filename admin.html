@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Loja Aparecida - Empório das Coxinhas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+  <style>
+    body { font-family: Arial, sans-serif; background:#fff8f0; padding:20px; }
+    h1 { text-align:center; color:#e5630e; }
+    table { width:100%; border-collapse:collapse; margin-top:20px; }
+    th,td { border:1px solid #e0c49e; padding:10px; text-align:center; }
+    th { background:#ffe1b3; }
+    tr:nth-child(even){ background:#fff4dd; }
+    .btn { padding:6px 12px; border:none; border-radius:5px; font-weight:bold; cursor:pointer; }
+    .ativo { background:#dc3545; color:#fff; }
+    .inativo { background:#28a745; color:#fff; }
+    input[type=number]{ width:70px; }
+    #btnSalvar,#btnLogout{ background:#ff8800; color:#fff; border:none; padding:10px 20px; border-radius:7px; cursor:pointer; margin:5px; }
+
+    .tabs{text-align:center;margin:20px 0;}
+    .tablink{ background:#f0ad4e;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;}
+    .tablink.active{ background:#d9534f;}
+    .tabcontent{ display:none;}
+  </style>
+</head>
+
+<body>
+<h1>Dashboard Loja Aparecida</h1>
+
+<div class="tabs">
+  <button class="tablink active" data-aba="produtos">Produtos</button>
+  <button class="tablink" data-aba="historico">Histórico</button>
+  <button class="tablink" id="tabRelatorios" data-aba="relatorios">Relatórios</button>
+</div>
+
+<!-- PRODUTOS -->
+<div id="produtos" class="tabcontent" style="display:block;">
+  <button id="btnSalvar">Salvar no Supabase</button>
+  <button id="btnLogout">Sair</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Categoria</th>
+        <th>Preço</th>
+        <th>Status</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyProdutos"></tbody>
+  </table>
+</div>
+
+<!-- HISTÓRICO -->
+<div id="historico" class="tabcontent">
+  <h2>Histórico de Pedidos</h2>
+  <button id="btnPedidos">Carregar Histórico</button>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Telefone</th>
+        <th>Bairro</th>
+        <th>Forma Pgto</th>
+        <th>Total</th>
+        <th>Data/Hora</th>
+      </tr>
+    </thead>
+    <tbody id="tbodyPedidos"></tbody>
+  </table>
+</div>
+
+<!-- RELATÓRIOS -->
+<div id="relatorios" class="tabcontent">
+  <h2>Relatórios</h2>
+  <button id="btnRelatorios">Carregar Relatórios</button>
+
+  <h3>Vendas por Dia</h3>
+  <table><tbody id="relDia"></tbody></table>
+
+  <h3>Vendas por Mês</h3>
+  <table><tbody id="relMes"></tbody></table>
+
+  <h3>Vendas por Forma de Pagamento</h3>
+  <table><tbody id="relPagto"></tbody></table>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

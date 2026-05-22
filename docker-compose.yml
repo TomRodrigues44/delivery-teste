@@ -1,0 +1,18 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: emporio-delivery
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.delivery.rule=Host(`delivery.emporiodascoxinhas.com.br`)"
+      - "traefik.http.routers.delivery.entrypoints=web"
+      - "traefik.http.services.delivery.loadbalancer.server.port=80"
+    volumes:
+      - /var/www/emporio-delivery:/usr/share/nginx/html:ro
+    networks:
+      - projetonet2
+
+networks:
+  projetonet2:
+    external: true
