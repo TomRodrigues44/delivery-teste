@@ -1,11 +1,13 @@
 {
-  "name": "emporio-das-coxinhas",
+  "name": "delivery-teste",
   "version": "1.0.0",
-  "description": "Delivery app for Empório das Coxinhas",
+  "private": true,
   "scripts": {
-    "dev": "echo 'Static site - no build needed' && exit 0"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC"
+  "devDependencies": {
+    "vite": "^5.4.0"
+  }
 }
