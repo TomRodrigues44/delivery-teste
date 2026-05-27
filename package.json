@@ -1,0 +1,11 @@
+{
+  "name": "emporio-das-coxinhas",
+  "version": "1.0.0",
+  "description": "Delivery app for Empório das Coxinhas",
+  "scripts": {
+    "dev": "echo 'Static site - no build needed' && exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
