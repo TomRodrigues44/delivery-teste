@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pagamento - Empório das Coxinhas</title>
+  <link rel="icon" href="assets/img/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      text-align: center;
+    }
+    .status-container {
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      padding: 40px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .loading {
+      font-size: 18px;
+      color: #e5630e;
+    }
+    .success {
+      color: #28a745;
+    }
+    .error {
+      color: #dc3545;
+    }
+    .btn-home {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      background: #ff8800;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .btn-home:hover {
+      background: #e5630e;
+    }
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #e5630e;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    .receipt-link {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #28a745;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .order-details {
+      text-align: left;
+      margin-top: 20px;
+      padding: 20px;
+      background: #fff4dd;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="status-container">
+    <div id="loading">
+      <div class="spinner"></div>
+      <p class="loading">Verificando pagamento...</p>
+    </div>
+    <div id="success" style="display:none;">
+      <h2 class="success">✅ Pagamento Confirmado!</h2>
+      <p>Seu pedido foi processado com sucesso.</p>
+      <a id="receipt-link" href="#" target="_blank" class="receipt-link">Ver Comprovante</a>
+      <div id="order-details" class="order-details"></div>
+      <a href="index.html" class="btn-home">Voltar ao Início</a>
+    </div>
+    <div id="error" style="display:none;">
+      <h2 class="error">❌ Pagamento Pendente</h2>
+      <p id="error-message">Seu pagamento ainda está sendo processado.</p>
+      <p>Se você já fez o pagamento, aguarde alguns minutos e recarregue a página.</p>
+      <a href="index.html" class="btn-home">Voltar ao Início</a>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // Obter parâmetros da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiptUrl = urlParams.get('receipt_url');
+    const orderNsu = urlParams.get('order_nsu');
+    const slug = urlParams.get('slug');
+    const transactionNsu = urlParams.get('transaction_nsu');
+    const captureMethod = urlParams.get('capture_method');
+
+    // Configuração Supabase
+    const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
+    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+    async function verificarPagamento() {
+      if (!orderNsu || !slug || !transactionNsu) {
+        showError('Parâmetros de pagamento não encontrados.');
+        return;
+      }
+
+      try {
+        // Verificar status na API da InfinitePay
+        const response = await fetch('https://api.checkout.infinitepay.io/payment_check', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            handle: 'emporiodascoxinhas1',
+            order_nsu: orderNsu,
+            transaction_nsu: transactionNsu,
+            slug: slug
+          })
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.paid) {
+          // Pagamento confirmado - buscar pedido no Supabase
+          const { data: pedido, error } = await supabase
+            .from('pedidos_aparecida')
+            .select('*')
+            .eq('order_nsu', orderNsu)
+            .single();
+
+          if (error) {
+            console.error('Erro ao buscar pedido:', error);
+            showError('Erro ao processar pedido.');
+            return;
+          }
+
+          // Verificar se já foi enviado WhatsApp
+          if (pedido.status_pagamento !== 'pago') {
+            // Atualizar status no Supabase
+            await supabase
+              .from('pedidos_aparecida')
+              .update({
+                status_pagamento: 'pago',
+                transaction_nsu: transactionNsu,
+                capture_method: captureMethod,
+                receipt_url: receiptUrl,
+                pago_em: new Date().toISOString()
+              })
+              .eq('order_nsu', orderNsu);
+
+            // Enviar WhatsApp com status PAGAMENTO OK
+            await enviarWhatsAppComPagamentoConfirmado(pedido, data);
+          }
+
+          showSuccess(pedido, data);
+        } else {
+          showError('Pagamento ainda não confirmado. Por favor, aguarde.');
+        }
+      } catch (error) {
+        console.error('Erro ao verificar pagamento:', error);
+        showError('Erro ao verificar pagamento. Tente novamente mais tarde.');
+      }
+    }
+
+    async function enviarWhatsAppComPagamentoConfirmado(pedido, paymentData) {
+      // Recuperar itens do carrinho (estavam salvos no pedido)
+      const itens = pedido.itens || [];
+
+      // Agrupar itens por categoria
+      const agrupados = {};
+      itens.forEach(item => {
+        if (!agrupados[item.categoria]) agrupados[item.categoria] = [];
+        agrupados[item.categoria].push(item);
+      });
+
+      let cabecalho = `*Empório das Coxinhas - Aparecida*\nAv. Santos Dumont n 1064-A, Aparecida\nCNPJ: 27.099.732/0001-37\nTel: (95) 99155-0102\n========================\n*Novo Pedido | SENHA: ${pedido.senha}*\n✅ *PAGAMENTO OK!*`;
+
+      let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n*Forma de Pagamento:* ${pedido.forma_pagamento}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
+
+      let itensFormatados = "";
+      const ordemCategorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
+      const nomesCategorias = { salgados: "SALGADOS", bolos: "BOLOS", brigadeiros: "BRIGADEIROS", bebidas: "BEBIDAS" };
+      ordemCategorias.forEach(cat => {
+        if (agrupados[cat]) {
+          itensFormatados += `\n*${nomesCategorias[cat]}*\n`;
+          agrupados[cat].forEach(item => {
+            itensFormatados += `*• ${item.nome}*`;
+            if (item.preco) itensFormatados += `  -  R$ ${item.preco.toFixed(2)}`;
+            itensFormatados += `\n`;
+            if (item.sabores) {
+              itensFormatados += `    Sabores:\n`;
+              item.sabores.forEach(sabor => {
+                itensFormatados += `      - ${sabor}\n`;
+              });
+            }
+          });
+        }
+      });
+
+      let totalFormat = `------------------------\n*Total:* R$ ${pedido.total.toFixed(2)}\n\n*Status do Pagamento:* CONFIRMADO ✅\n*Método:* ${captureMethod === 'credit_card' ? 'Cartão de Crédito/Débito' : 'PIX'}`;
+
+      let corpoPedido = `${cabecalho}\n${dadosCliente}\n\n*Itens:*\n${itensFormatados}${totalFormat}`;
+
+      let urlZap = "https://wa.me/5595991550102?text=" + encodeURIComponent(corpoPedido);
+      window.open(urlZap, "_blank");
+    }
+
+    function showSuccess(pedido, paymentData) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('success').style.display = 'block';
+
+      if (receiptUrl) {
+        document.getElementById('receipt-link').href = receiptUrl;
+      }
+
+      // Mostrar detalhes do pedido
+      const detailsDiv = document.getElementById('order-details');
+      detailsDiv.innerHTML = `
+        <h3>Detalhes do Pedido</h3>
+        <p><strong>Senha:</strong> ${pedido.senha}</p>
+        <p><strong>Nome:</strong> ${pedido.nome}</p>
+        <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
+        <p><strong>Forma de Pagamento:</strong> ${captureMethod === 'credit_card' ? 'Cartão de Crédito/Débito' : 'PIX'}</p>
+        <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
+      `;
+    }
+
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error-message').textContent = message;
+    }
+
+    // Verificar pagamento ao carregar a página
+    verificarPagamento();
+  </script>
+</body>
+</html>

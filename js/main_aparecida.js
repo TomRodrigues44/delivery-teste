@@ -591,21 +591,8 @@ ${obs ? `*Observações:* ${obs}` : ""}`
   }
 });
 
-// --- EXIBE CAMPO DE TROCO AUTOMATICAMENTE ---
-document.addEventListener('DOMContentLoaded', function () {
-  const formaPagamento = document.getElementById("formaPagamento");
-  const campoTroco = document.getElementById("campoTroco");
-
-  if (formaPagamento && campoTroco) {
-    formaPagamento.addEventListener("change", function () {
-      if (formaPagamento.value === "Dinheiro") {
-        campoTroco.style.display = "block";
-      } else {
-        campoTroco.style.display = "none";
-      }
-    });
-  }
-});
+// --- EXIBE CAMPO DE TROCO AUTOMATICAMENTE (REMOVIDO - NAO USA MAIS DINHEIRO) ---
+// Campo de troco foi removido pois agora so aceita pagamentos online (PIX/Cartao)
 
 
 // --- BLOQUEIO POR HORÁRIO DE FUNCIONAMENTO ---
