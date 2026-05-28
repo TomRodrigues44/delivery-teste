@@ -94,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
                   email,
                   endereco: end,
                   bairro,
-                  cep,
                   forma_pagamento: "Online (InfinitePay)",
                   observacao: obs,
                   itens: carrinho,
