@@ -450,6 +450,18 @@ if (telInput) {
   });
 }
 
+// --- MÁSCARA AUTOMÁTICA CEP ---
+
+const cepInput = document.getElementById('cepCliente');
+if (cepInput) {
+  cepInput.addEventListener('input', function(e) {
+    let v = this.value.replace(/\D/g, '');
+    if (v.length > 8) v = v.slice(0, 8);
+    if (v.length > 5) v = v.slice(0, 5) + '-' + v.slice(5);
+    this.value = v;
+  });
+}
+
 // --- AGRUPAR ITENS POR CATEGORIA ---
 function agruparItensPorCategoria(lista) {
   const agrupados = {};

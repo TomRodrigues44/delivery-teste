@@ -86,9 +86,11 @@
       <form id="form-checkout" onsubmit="return false;">
         <input type="text" id="nomeCliente" placeholder="Nome" required>
         <input type="tel" id="telCliente" placeholder="Telefone" required maxlength="15">
+        <input type="email" id="emailCliente" placeholder="E-mail (opcional)">
         <input type="text" id="enderecoCliente" placeholder="Endereço de Entrega" required>
         <input type="text" id="bairroCliente" placeholder="Bairro" list="lista-bairros" autocomplete="off" required oninput="atualizaTaxa()">
         <datalist id="lista-bairros"></datalist>
+        <input type="text" id="cepCliente" placeholder="CEP (opcional)" maxlength="9">
 
 <textarea id="observacaoCliente" placeholder="Observações (opcional)" rows="3"
   style="width: 96%; padding: 9px; margin: 5px 0 7px 0; border-radius: 7px; border: 1px solid #ffd49a; font-size: 1.07em;"></textarea>
@@ -111,7 +113,7 @@
   <footer>
     <p>&copy; 2025 Empório das Coxinhas. Todos os direitos reservados.</p>
   </footer>
-  <script src="js/main_aparecida.js?v=4"></script>
-    <script src="js/main_aparecida_infinitepay.js?v=4"></script>
+  <script src="js/main_aparecida.js?v=6"></script>
+    <script src="js/main_aparecida_infinitepay.js?v=6"></script>
   </body>
 </html>

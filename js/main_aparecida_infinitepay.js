@@ -16,15 +16,17 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
 
       const nome = document.getElementById("nomeCliente").value.trim();
-      const tel = document.getElementById("telCliente").value.trim();
-      const end = document.getElementById("enderecoCliente").value.trim();
-      let bairro = document.getElementById("bairroCliente").value.trim();
-      const obs = document.getElementById("observacaoCliente").value.trim();
-
-      if (!nome || !tel || !end || !bairro) {
-        alert("Preencha todos os campos obrigatórios!");
-        return;
-      }
+            const tel = document.getElementById("telCliente").value.trim();
+            const email = document.getElementById("emailCliente").value.trim();
+            const end = document.getElementById("enderecoCliente").value.trim();
+            let bairro = document.getElementById("bairroCliente").value.trim();
+            const cep = document.getElementById("cepCliente").value.trim();
+            const obs = document.getElementById("observacaoCliente").value.trim();
+      
+            if (!nome || !tel || !end || !bairro) {
+              alert("Preencha todos os campos obrigatórios!");
+              return;
+            }
 
       // Corrigir o bairro digitado
       const corrigido = corrigirNomeBairro(bairro);
@@ -68,13 +70,15 @@ document.addEventListener('DOMContentLoaded', function () {
               redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
               customer: {
                 name: nome,
-                phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, '')
+                phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, ''),
+                email: email || "cliente@exemplo.com" // Email opcional, usa valor padrão se não informado
               },
               address: {
                 street: end,
                 neighborhood: bairro,
                 city: "Boa Vista",
-                state: "RR"
+                state: "RR",
+                zip_code: cep || "69300000" // CEP opcional, usa valor padrão se não informado
               },
               items: itemsInfinitePay
             };
@@ -87,8 +91,10 @@ document.addEventListener('DOMContentLoaded', function () {
                   order_nsu: orderNsu,
                   nome,
                   tel,
+                  email,
                   endereco: end,
                   bairro,
+                  cep,
                   forma_pagamento: "Online (InfinitePay)",
                   observacao: obs,
                   itens: carrinho,

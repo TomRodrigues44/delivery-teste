@@ -203,7 +203,7 @@
               formaPagamentoTexto = "PIX";
             }
       
-            let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n*Forma de Pagamento:* ${formaPagamentoTexto}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
+            let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n${pedido.email ? `*E-mail:* ${pedido.email}\n` : ""}*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n${pedido.cep ? `*CEP:* ${pedido.cep}\n` : ""}*Forma de Pagamento:* ${formaPagamentoTexto}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
 
       let itensFormatados = "";
       const ordemCategorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
