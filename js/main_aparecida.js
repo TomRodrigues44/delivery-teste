@@ -596,6 +596,10 @@ ${obs ? `*Observações:* ${obs}` : ""}`
 
 
 // --- BLOQUEIO POR HORÁRIO DE FUNCIONAMENTO ---
+// TEMPORARIAMENTE DESATIVADO PARA TESTES
+// Reativar após concluir todos os avanços
+
+/*
 function verificaHorarioFuncionamento() {
   const agora = new Date();
   const diaSemana = agora.getDay(); // 0 = Domingo, 6 = Sábado
@@ -630,3 +634,4 @@ function verificaHorarioFuncionamento() {
   }
 }
 document.addEventListener("DOMContentLoaded", verificaHorarioFuncionamento);
+*/
