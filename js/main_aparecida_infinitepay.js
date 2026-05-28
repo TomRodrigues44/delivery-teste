@@ -64,24 +64,24 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       // Preparar payload para a InfinitePay
-            const payloadInfinitePay = {
-              handle: "emporiodascoxinhas1",
-              order_nsu: orderNsu,
-              redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
-              customer: {
-                name: nome,
-                phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, ''),
-                email: email || "cliente@exemplo.com" // Email opcional, usa valor padrão se não informado
-              },
-              address: {
-                street: end,
-                neighborhood: bairro,
-                city: "Boa Vista",
-                state: "RR",
-                zip_code: cep || "69300000" // CEP opcional, usa valor padrão se não informado
-              },
-              items: itemsInfinitePay
-            };
+                  const payloadInfinitePay = {
+                    handle: "emporiodascoxinhas1",
+                    order_nsu: orderNsu,
+                    redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
+                    customer: {
+                      name: nome,
+                      phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, ''),
+                      email: email || "cliente@exemplo.com" // Email opcional, usa valor padrão se não informado
+                    },
+                    address: {
+                      street: end,
+                      neighborhood: bairro,
+                      city: "Boa Vista",
+                      state: "RR",
+                      zip_code: cep ? cep.replace(/\D/g, '') : "69300000" // CEP apenas números, usa valor padrão se não informado
+                    },
+                    items: itemsInfinitePay
+                  };
 
       // Salvar pedido no Supabase antes de redirecionar
       try {
@@ -131,9 +131,9 @@ document.addEventListener('DOMContentLoaded', function () {
       }
 
       // Criar checkout na InfinitePay
-      try {
-        console.log("Criando checkout na InfinitePay...");
-        console.log("Payload para InfinitePay:", payloadInfinitePay);
+            try {
+              console.log("Criando checkout na InfinitePay...");
+              console.log("Payload para InfinitePay:", JSON.stringify(payloadInfinitePay, null, 2));
 
         // Usar proxy CORS se estiver em localhost
         const apiUrl = USE_CORS_PROXY 
