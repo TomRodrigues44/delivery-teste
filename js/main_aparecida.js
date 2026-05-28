@@ -599,6 +599,22 @@ ${obs ? `*Observações:* ${obs}` : ""}`
 // TEMPORARIAMENTE DESATIVADO PARA TESTES
 // Reativar após concluir todos os avanços
 
+// Forçar aviso a ficar oculto
+document.addEventListener("DOMContentLoaded", function() {
+  const aviso = document.getElementById("aviso-fechado");
+  if (aviso) {
+    aviso.style.display = "none";
+    aviso.style.visibility = "hidden";
+    aviso.style.opacity = "0";
+  }
+
+  // Garantir que o botão de finalizar esteja habilitado
+  const btnFinalizar = document.querySelector(".finalizar-btn");
+  if (btnFinalizar) {
+    btnFinalizar.disabled = false;
+  }
+});
+
 /*
 function verificaHorarioFuncionamento() {
   const agora = new Date();
