@@ -76,6 +76,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
       // Salvar pedido no Supabase antes de redirecionar
       try {
+        console.log("Salvando pedido no Supabase...");
+        const pedidoData = {
+          senha,
+          order_nsu: orderNsu,
+          nome,
+          tel,
+          endereco: end,
+          bairro,
+          forma_pagamento: formaPgto,
+          observacao: obs,
+          itens: carrinho,
+          taxa_entrega: taxaAtual,
+          total: totalPedido,
+          status_pagamento: 'pendente',
+          criado_em: new Date().toISOString()
+        };
+        console.log("Dados do pedido:", pedidoData);
+
         const supabaseResponse = await fetch("https://jlvumlkiecvmtldmgntl.supabase.co/rest/v1/pedidos_aparecida", {
           method: "POST",
           headers: {
@@ -83,34 +101,29 @@ document.addEventListener('DOMContentLoaded', function () {
             "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw",
             "Content-Type": "application/json"
           },
-          body: JSON.stringify({
-            senha,
-            order_nsu: orderNsu,
-            nome,
-            tel,
-            endereco: end,
-            bairro,
-            forma_pagamento: formaPgto,
-            observacao: obs,
-            itens: carrinho,
-            taxa_entrega: taxaAtual,
-            total: totalPedido,
-            status_pagamento: 'pendente',
-            criado_em: new Date().toISOString()
-          })
+          body: JSON.stringify(pedidoData)
         });
 
+        console.log("Resposta do Supabase:", supabaseResponse.status, supabaseResponse.statusText);
+
         if (!supabaseResponse.ok) {
-          throw new Error("Erro ao salvar pedido no Supabase");
+          const errorText = await supabaseResponse.text();
+          console.error("Erro detalhado do Supabase:", errorText);
+          throw new Error("Erro ao salvar pedido no Supabase: " + errorText);
         }
+
+        console.log("Pedido salvo com sucesso no Supabase!");
       } catch (err) {
         console.error("Erro ao salvar pedido no Supabase:", err);
-        alert("Erro ao processar pedido. Tente novamente.");
+        alert("Erro ao processar pedido. Tente novamente.\n\nErro: " + err.message);
         return;
       }
 
       // Criar checkout na InfinitePay
       try {
+        console.log("Criando checkout na InfinitePay...");
+        console.log("Payload para InfinitePay:", payloadInfinitePay);
+
         const infinitePayResponse = await fetch("https://api.checkout.infinitepay.io/links", {
           method: "POST",
           headers: {
@@ -119,7 +132,10 @@ document.addEventListener('DOMContentLoaded', function () {
           body: JSON.stringify(payloadInfinitePay)
         });
 
+        console.log("Resposta da InfinitePay:", infinitePayResponse.status, infinitePayResponse.statusText);
+
         const infinitePayData = await infinitePayResponse.json();
+        console.log("Dados retornados pela InfinitePay:", infinitePayData);
 
         if (infinitePayData.url) {
           // Limpar carrinho e fechar modal
@@ -130,13 +146,14 @@ document.addEventListener('DOMContentLoaded', function () {
           taxaAtual = 0;
 
           // Redirecionar para o checkout da InfinitePay
+          console.log("Redirecionando para:", infinitePayData.url);
           window.location.href = infinitePayData.url;
         } else {
-          throw new Error("Erro ao criar checkout na InfinitePay");
+          throw new Error("Erro ao criar checkout na InfinitePay: " + JSON.stringify(infinitePayData));
         }
       } catch (err) {
         console.error("Erro ao criar checkout na InfinitePay:", err);
-        alert("Erro ao processar pagamento. Tente novamente.");
+        alert("Erro ao processar pagamento. Tente novamente.\n\nErro: " + err.message);
       }
     });
   }
