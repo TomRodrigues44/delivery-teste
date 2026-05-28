@@ -192,8 +192,18 @@
       });
 
       let cabecalho = `*Empório das Coxinhas - Aparecida*\nAv. Santos Dumont n 1064-A, Aparecida\nCNPJ: 27.099.732/0001-37\nTel: (95) 99155-0102\n========================\n*Novo Pedido | SENHA: ${pedido.senha}*\n✅ *PAGAMENTO OK!*`;
-
-      let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n*Forma de Pagamento:* ${pedido.forma_pagamento}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
+      
+            // Determinar forma de pagamento baseada no capture_method
+            let formaPagamentoTexto = "Online";
+            if (captureMethod === 'credit_card') {
+              formaPagamentoTexto = "Cartão de Crédito";
+            } else if (captureMethod === 'debit_card') {
+              formaPagamentoTexto = "Cartão de Débito";
+            } else if (captureMethod === 'pix') {
+              formaPagamentoTexto = "PIX";
+            }
+      
+            let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n*Forma de Pagamento:* ${formaPagamentoTexto}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
 
       let itensFormatados = "";
       const ordemCategorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
@@ -215,7 +225,7 @@
         }
       });
 
-      let totalFormat = `------------------------\n*Total:* R$ ${pedido.total.toFixed(2)}\n\n*Status do Pagamento:* CONFIRMADO ✅\n*Método:* ${captureMethod === 'credit_card' ? 'Cartão de Crédito/Débito' : 'PIX'}`;
+      let totalFormat = `------------------------\n*Total:* R$ ${pedido.total.toFixed(2)}\n\n*Status do Pagamento:* CONFIRMADO ✅\n*Método:* ${formaPagamentoTexto}`;
 
       let corpoPedido = `${cabecalho}\n${dadosCliente}\n\n*Itens:*\n${itensFormatados}${totalFormat}`;
 
@@ -232,15 +242,15 @@
       }
 
       // Mostrar detalhes do pedido
-      const detailsDiv = document.getElementById('order-details');
-      detailsDiv.innerHTML = `
-        <h3>Detalhes do Pedido</h3>
-        <p><strong>Senha:</strong> ${pedido.senha}</p>
-        <p><strong>Nome:</strong> ${pedido.nome}</p>
-        <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
-        <p><strong>Forma de Pagamento:</strong> ${captureMethod === 'credit_card' ? 'Cartão de Crédito/Débito' : 'PIX'}</p>
-        <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
-      `;
+            const detailsDiv = document.getElementById('order-details');
+            detailsDiv.innerHTML = `
+              <h3>Detalhes do Pedido</h3>
+              <p><strong>Senha:</strong> ${pedido.senha}</p>
+              <p><strong>Nome:</strong> ${pedido.nome}</p>
+              <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
+              <p><strong>Forma de Pagamento:</strong> ${formaPagamentoTexto}</p>
+              <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
+            `;
     }
 
     function showError(message) {

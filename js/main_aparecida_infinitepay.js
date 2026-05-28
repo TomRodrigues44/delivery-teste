@@ -19,11 +19,10 @@ document.addEventListener('DOMContentLoaded', function () {
       const tel = document.getElementById("telCliente").value.trim();
       const end = document.getElementById("enderecoCliente").value.trim();
       let bairro = document.getElementById("bairroCliente").value.trim();
-      const formaPgto = document.getElementById("formaPagamento").value;
       const obs = document.getElementById("observacaoCliente").value.trim();
 
-      if (!nome || !tel || !end || !bairro || !formaPgto) {
-        alert("Preencha todos os campos!");
+      if (!nome || !tel || !end || !bairro) {
+        alert("Preencha todos os campos obrigatórios!");
         return;
       }
 
@@ -63,39 +62,41 @@ document.addEventListener('DOMContentLoaded', function () {
       });
 
       // Preparar payload para a InfinitePay
-      const payloadInfinitePay = {
-        handle: "emporiodascoxinhas1",
-        order_nsu: orderNsu,
-        redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
-        customer: {
-          name: nome,
-          phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, '')
-        },
-        address: {
-          street: end,
-          neighborhood: bairro
-        },
-        items: itemsInfinitePay
-      };
+            const payloadInfinitePay = {
+              handle: "emporiodascoxinhas1",
+              order_nsu: orderNsu,
+              redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
+              customer: {
+                name: nome,
+                phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, '')
+              },
+              address: {
+                street: end,
+                neighborhood: bairro,
+                city: "Boa Vista",
+                state: "RR"
+              },
+              items: itemsInfinitePay
+            };
 
       // Salvar pedido no Supabase antes de redirecionar
       try {
         console.log("Salvando pedido no Supabase...");
         const pedidoData = {
-          senha,
-          order_nsu: orderNsu,
-          nome,
-          tel,
-          endereco: end,
-          bairro,
-          forma_pagamento: formaPgto,
-          observacao: obs,
-          itens: carrinho,
-          taxa_entrega: taxaAtual,
-          total: totalPedido,
-          status_pagamento: 'pendente',
-          criado_em: new Date().toISOString()
-        };
+                  senha,
+                  order_nsu: orderNsu,
+                  nome,
+                  tel,
+                  endereco: end,
+                  bairro,
+                  forma_pagamento: "Online (InfinitePay)",
+                  observacao: obs,
+                  itens: carrinho,
+                  taxa_entrega: taxaAtual,
+                  total: totalPedido,
+                  status_pagamento: 'pendente',
+                  criado_em: new Date().toISOString()
+                };
         console.log("Dados do pedido:", pedidoData);
 
         const supabaseResponse = await fetch("https://jlvumlkiecvmtldmgntl.supabase.co/rest/v1/pedidos_aparecida", {
