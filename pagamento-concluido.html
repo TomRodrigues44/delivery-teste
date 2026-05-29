@@ -130,6 +130,20 @@
       border-radius: 8px;
       margin: 20px 0;
     }
+    .email-status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .email-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+    .email-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
   </style>
 </head>
 <body>
@@ -142,6 +156,8 @@
       <h2 class="success">✅ Pagamento Confirmado!</h2>
       <p>Seu pedido foi processado com sucesso.</p>
       <a id="receipt-link" href="#" target="_blank" class="receipt-link">Ver Comprovante</a>
+      
+      <div id="email-status"></div>
       
       <div class="warning-box">
         <strong>⚠️ Importante:</strong> Se o WhatsApp não abriu automaticamente, clique no botão abaixo para enviar o pedido.
@@ -167,8 +183,32 @@
     </div>
   </div>
 
+  <!-- EmailJS SDK -->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    // ==========================================
+    // CONFIGURAÇÃO EMAILJS
+    // ==========================================
+    // ⚠️ IMPORTANTE: Você precisa configurar o EmailJS antes de usar
+    // 1. Crie uma conta em https://www.emailjs.com/
+    // 2. Adicione um serviço de email (ex: Gmail)
+    // 3. Crie um template de email
+    // 4. Substitua os valores abaixo:
+    
+    const EMAILJS_PUBLIC_KEY = "SUA_PUBLIC_KEY_AQUI"; // Substitua pela sua Public Key
+    const EMAILJS_SERVICE_ID = "SEU_SERVICE_ID_AQUI"; // Substitua pelo seu Service ID
+    const EMAILJS_TEMPLATE_ID = "SEU_TEMPLATE_ID_AQUI"; // Substitua pelo seu Template ID
+
+    // Inicializar EmailJS
+    if (EMAILJS_PUBLIC_KEY !== "SUA_PUBLIC_KEY_AQUI") {
+      emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
+
+    // ==========================================
+    // FIM DA CONFIGURAÇÃO EMAILJS
+    // ==========================================
+
     // Proxy CORS para testes locais (Dyad)
     const USE_CORS_PROXY = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const CORS_PROXY = 'https://corsproxy.io/?';
@@ -194,6 +234,62 @@
 
     // Variável global para armazenar a mensagem
     let mensagemWhatsAppGlobal = '';
+
+    // Função para enviar email de confirmação
+    async function enviarEmailConfirmacao(pedido) {
+      // Verificar se o EmailJS está configurado
+      if (EMAILJS_PUBLIC_KEY === "SUA_PUBLIC_KEY_AQUI") {
+        console.warn("⚠️ EmailJS não configurado. Pulando envio de email.");
+        return;
+      }
+
+      // Verificar se o cliente forneceu email
+      if (!pedido.email) {
+        console.warn("⚠️ Cliente não forneceu email. Pulando envio de email.");
+        return;
+      }
+
+      const emailStatusDiv = document.getElementById('email-status');
+      emailStatusDiv.innerHTML = '<div class="email-status">📧 Enviando email de confirmação...</div>';
+
+      try {
+        // Preparar itens do email
+        let itensTexto = '';
+        if (pedido.itens && Array.isArray(pedido.itens)) {
+          pedido.itens.forEach(item => {
+            itensTexto += `- ${item.nome} (R$ ${item.preco.toFixed(2)})\n`;
+            if (item.sabores) {
+              itensTexto += `  Sabores: ${item.sabores.join(', ')}\n`;
+            }
+          });
+        }
+
+        // Parâmetros do template EmailJS
+        const templateParams = {
+          to_name: pedido.nome,
+          to_email: pedido.email,
+          senha: pedido.senha,
+          total: pedido.total.toFixed(2),
+          forma_pagamento: pedido.forma_pagamento,
+          endereco: `${pedido.endereco}, ${pedido.bairro}`,
+          itens: itensTexto,
+          data: new Date(pedido.criado_em).toLocaleString('pt-BR')
+        };
+
+        // Enviar email
+        await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          templateParams
+        );
+
+        console.log("✅ Email enviado com sucesso!");
+        emailStatusDiv.innerHTML = '<div class="email-status success">✅ Email de confirmação enviado!</div>';
+      } catch (error) {
+        console.error("❌ Erro ao enviar email:", error);
+        emailStatusDiv.innerHTML = '<div class="email-status error">❌ Erro ao enviar email. Tente novamente.</div>';
+      }
+    }
 
     async function verificarPagamento() {
       if (!orderNsu || !slug || !transactionNsu) {
@@ -273,6 +369,9 @@
             
             // Enviar WhatsApp com status PAGAMENTO OK
             await enviarWhatsAppComPagamentoConfirmado(pedido, data);
+            
+            // Enviar email de confirmação
+            await enviarEmailConfirmacao(pedido);
           } else {
             console.log("ℹ️ Pedido já estava marcado como pago. Gerando mensagem para envio manual...");
             // Gerar mensagem mesmo se já estiver pago
