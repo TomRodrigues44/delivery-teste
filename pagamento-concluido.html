@@ -254,7 +254,7 @@
         // Parâmetros do template EmailJS
         const templateParams = {
           to_name: pedido.nome,
-          to_email: pedido.email,
+          to_email: pedido.email, // IMPORTANTE: No template do EmailJS, o campo "To" deve ser {{to_email}}
           senha: pedido.senha,
           total: pedido.total.toFixed(2),
           forma_pagamento: pedido.forma_pagamento,
@@ -263,20 +263,30 @@
           data: new Date(pedido.criado_em).toLocaleString('pt-BR')
         };
 
-        console.log("📧 Enviando email com parâmetros:", templateParams);
+        console.log("📧 [DEBUG] Enviando email com parâmetros:", templateParams);
+        console.log("📧 [DEBUG] Service ID:", EMAILJS_SERVICE_ID);
+        console.log("📧 [DEBUG] Template ID:", EMAILJS_TEMPLATE_ID);
 
         // Enviar email
-        await emailjs.send(
+        const response = await emailjs.send(
           EMAILJS_SERVICE_ID,
           EMAILJS_TEMPLATE_ID,
           templateParams
         );
 
-        console.log("✅ Email enviado com sucesso!");
-        emailStatusDiv.innerHTML = '<div class="email-status success">✅ Email de confirmação enviado!</div>';
+        console.log("✅ [DEBUG] Resposta do EmailJS:", response);
+        
+        if (response.status === 200) {
+            console.log("✅ Email enviado com sucesso para:", pedido.email);
+            emailStatusDiv.innerHTML = '<div class="email-status success">✅ Email de confirmação enviado para ' + pedido.email + '!</div>';
+        } else {
+            throw new Error("Status não 200: " + response.status);
+        }
+
       } catch (error) {
-        console.error("❌ Erro ao enviar email:", error);
-        emailStatusDiv.innerHTML = '<div class="email-status error">❌ Erro ao enviar email. Tente novamente.</div>';
+        console.error("❌ [DEBUG] Erro ao enviar email:", error);
+        console.error("❌ [DEBUG] Detalhes do erro:", JSON.stringify(error));
+        emailStatusDiv.innerHTML = '<div class="email-status error">❌ Erro ao enviar email. Verifique o console (F12) para detalhes.</div>';
       }
     }
 
