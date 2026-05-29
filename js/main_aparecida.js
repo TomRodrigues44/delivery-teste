@@ -510,7 +510,7 @@ if (!corrigido) {
       let cabecalho = `*Empório das Coxinhas - Aparecida*
 Av. Santos Dumont n 1064-A, Aparecida
 CNPJ: 27.099.732/0001-37
-Tel: (95) 99155-0102
+Tel: (95) 98122-9240
 ========================
 *Novo Pedido | SENHA: ${senha}*`;
 
@@ -562,7 +562,7 @@ ${obs ? `*Observações:* ${obs}` : ""}`
 
       let corpoPedido = `${cabecalho}\n${dadosCliente}\n\n*Itens:*\n${itensFormatados}${totalFormat}`;
 
-      let urlZap = "https://wa.me/5595991550102?text=" + encodeURIComponent(corpoPedido);
+      let urlZap = "https://wa.me/5595981229240?text=" + encodeURIComponent(corpoPedido);
       window.open(urlZap, "_blank");
 
       // Salvar no Supabase (Histórico de pedidos - Aparecida)
