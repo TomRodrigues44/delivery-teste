@@ -190,20 +190,13 @@
     // ==========================================
     // CONFIGURAÇÃO EMAILJS
     // ==========================================
-    // ⚠️ IMPORTANTE: Você precisa configurar o EmailJS antes de usar
-    // 1. Crie uma conta em https://www.emailjs.com/
-    // 2. Adicione um serviço de email (ex: Gmail)
-    // 3. Crie um template de email
-    // 4. Substitua os valores abaixo:
     
-    const EMAILJS_PUBLIC_KEY = "SUA_PUBLIC_KEY_AQUI"; // Substitua pela sua Public Key
-    const EMAILJS_SERVICE_ID = "SEU_SERVICE_ID_AQUI"; // Substitua pelo seu Service ID
-    const EMAILJS_TEMPLATE_ID = "SEU_TEMPLATE_ID_AQUI"; // Substitua pelo seu Template ID
+    const EMAILJS_PUBLIC_KEY = "CC3yE4ty27ot_K2YM";
+    const EMAILJS_SERVICE_ID = "service_jf6gs2e";
+    const EMAILJS_TEMPLATE_ID = "template_8xvfy6c";
 
     // Inicializar EmailJS
-    if (EMAILJS_PUBLIC_KEY !== "SUA_PUBLIC_KEY_AQUI") {
-      emailjs.init(EMAILJS_PUBLIC_KEY);
-    }
+    emailjs.init(EMAILJS_PUBLIC_KEY);
 
     // ==========================================
     // FIM DA CONFIGURAÇÃO EMAILJS
@@ -237,12 +230,6 @@
 
     // Função para enviar email de confirmação
     async function enviarEmailConfirmacao(pedido) {
-      // Verificar se o EmailJS está configurado
-      if (EMAILJS_PUBLIC_KEY === "SUA_PUBLIC_KEY_AQUI") {
-        console.warn("⚠️ EmailJS não configurado. Pulando envio de email.");
-        return;
-      }
-
       // Verificar se o cliente forneceu email
       if (!pedido.email) {
         console.warn("⚠️ Cliente não forneceu email. Pulando envio de email.");
@@ -275,6 +262,8 @@
           itens: itensTexto,
           data: new Date(pedido.criado_em).toLocaleString('pt-BR')
         };
+
+        console.log("📧 Enviando email com parâmetros:", templateParams);
 
         // Enviar email
         await emailjs.send(
