@@ -37,6 +37,9 @@ const imagens = {
 let produtos = {};
 
 async function carregarDoSupabase() {
+  // Mostrar skeletons enquanto carrega
+  mostrarSkeletons();
+
   const res = await fetch("https://jlvumlkiecvmtldmgntl.supabase.co/rest/v1/produtos_aparecida", {
     method: "GET",
     headers: {
@@ -47,7 +50,6 @@ async function carregarDoSupabase() {
   const dados = await res.json();
   console.log("🟨 Dados recebidos do Supabase:", dados);
 
-
   produtos = {};
   dados.forEach(p => {
     const cat = (p.categoria || '').trim().toLowerCase();
@@ -55,7 +57,6 @@ async function carregarDoSupabase() {
     produtos[cat].push(p);
   });
 
-  
   // Ordenar bebidas na ordem desejada
   const ordemDesejada = ['Coca-Cola 1L', 'Fanta Laranja 1L', 'Guaraná 1L', 'Coca-Cola (Lata)', 'Coca-Cola Zero (Lata)', 'Guaraná (Lata)', 'Fanta Laranja (Lata)', 'Fanta Uva (Lata)', 'Água Mineral 500ml', 'Suco Skinka 500ml'];
   
@@ -81,10 +82,30 @@ async function carregarDoSupabase() {
   }
 
   renderizarProdutos();
+  
+  // Mostrar toast de sucesso
+  if (window.toast) {
+    toast.success('Produtos carregados com sucesso!');
+  }
+}
+
+function mostrarSkeletons() {
+  const categorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
+  categorias.forEach(cat => {
+    const container = document.getElementById(`${cat}-list`);
+    if (container) {
+      container.innerHTML = Array(4).fill(`
+        <div class="skeleton-card">
+          <div class="skeleton skeleton-img"></div>
+          <div class="skeleton skeleton-text"></div>
+          <div class="skeleton skeleton-text short"></div>
+        </div>
+      `).join('');
+    }
+  });
 }
 
 carregarDoSupabase();
-
 
 // Lista de bairros EXEMPLO
 let bairros = [
@@ -250,24 +271,44 @@ function atualizarCarrinho() {
   let total = carrinho.reduce((acc, item) => acc + item.preco * (item.qtd || 1), 0);
   document.getElementById("carrinho-total-mob").innerText = `R$ ${total.toFixed(2)}`;
   let html = '';
-  carrinho.forEach((item, idx) => {
-    html += `<div class="carrinho-item">
-      <div>
-        <div class="carrinho-item-nome">${item.nome}</div>
-        ${item.sabores ? `<div class="carrinho-item-sabores"><b>Sabores:</b> ${item.sabores.join(', ')}</div>` : ''}
+  
+  if (carrinho.length === 0) {
+    html = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🛒</div>
+        <div class="empty-state-text">Seu carrinho está vazio</div>
+        <div class="empty-state-subtext">Adicione itens para começar</div>
       </div>
-      <div>R$ ${item.preco.toFixed(2)}</div>
-      <button class="carrinho-remove" onclick="removerItemCarrinho(${idx})">×</button>
-    </div>`;
-  });
-  document.getElementById("carrinho-itens").innerHTML = html || "<p style='text-align:center;color:#c5a76b'>Carrinho vazio.</p>";
+    `;
+  } else {
+    carrinho.forEach((item, idx) => {
+      html += `<div class="carrinho-item">
+        <div>
+          <div class="carrinho-item-nome">${item.nome}</div>
+          ${item.sabores ? `<div class="carrinho-item-sabores"><b>Sabores:</b> ${item.sabores.join(', ')}</div>` : ''}
+        </div>
+        <div>R$ ${item.preco.toFixed(2)}</div>
+        <button class="carrinho-remove" onclick="removerItemCarrinho(${idx})">×</button>
+      </div>`;
+    });
+  }
+  
+  document.getElementById("carrinho-itens").innerHTML = html;
   document.getElementById("carrinho-total").innerText = `Subtotal: R$ ${total.toFixed(2)}`;
   localStorage.setItem('carrinho', JSON.stringify(carrinho));
 }
+
 function removerItemCarrinho(idx) {
+  const itemRemovido = carrinho[idx];
   carrinho.splice(idx, 1);
   atualizarCarrinho();
+  
+  // Mostrar toast
+  if (window.toast) {
+    toast.warning(`${itemRemovido.nome} removido do carrinho`);
+  }
 }
+
 window.toggleCarrinho = function(abrir = null) {
   const sidebar = document.getElementById("carrinho-sidebar");
   if (abrir === true) sidebar.classList.add("aberto");
@@ -275,18 +316,22 @@ window.toggleCarrinho = function(abrir = null) {
   else sidebar.classList.toggle("aberto");
   atualizarCarrinho();
 }
+
 function atualizarMobileCarrinho() {
   if (window.innerWidth < 700) document.getElementById("carrinho-mobile").style.display = "flex";
   else document.getElementById("carrinho-mobile").style.display = "none";
 }
+
 function ocultarCarrinhoMobile() {
   var el = document.getElementById("carrinho-mobile");
   if (el) el.style.display = "none";
 }
+
 function mostrarCarrinhoMobile() {
   var el = document.getElementById("carrinho-mobile");
   if (el && window.innerWidth < 700) el.style.display = "flex";
 }
+
 window.addEventListener('resize', atualizarMobileCarrinho);
 document.addEventListener('DOMContentLoaded', atualizarMobileCarrinho);
 
@@ -296,6 +341,11 @@ window.adicionarProduto = function(categoria, nome, preco) {
   else {
     carrinho.push({ categoria, nome, preco, qtd: 1 });
     atualizarCarrinho();
+    
+    // Mostrar toast
+    if (window.toast) {
+      toast.success(`${nome} adicionado ao carrinho!`);
+    }
   }
 };
 
@@ -363,6 +413,11 @@ function abrirModalSabores(nome, preco) {
       modal.style.display = "none";
       atualizarCarrinho();
       console.log("Item adicionado ao carrinho:", { nome, preco, sabores });
+      
+      // Mostrar toast
+      if (window.toast) {
+        toast.success(`${nome} adicionado ao carrinho!`);
+      }
     };
   } else {
     console.error("Botão 'Adicionar' não encontrado no modal!");
@@ -383,7 +438,11 @@ function abrirModalSabores(nome, preco) {
 function abrirCheckout() {
   console.log("Abrindo checkout, carrinho:", carrinho);
   if (!carrinho.length) {
-    alert("Carrinho vazio.");
+    if (window.toast) {
+      toast.warning('Carrinho vazio. Adicione itens primeiro!');
+    } else {
+      alert("Carrinho vazio.");
+    }
     return;
   }
   document.getElementById("carrinho-sidebar").classList.remove("aberto");
@@ -488,14 +547,22 @@ const obs = document.getElementById("observacaoCliente").value.trim();
 const valorTroco = document.getElementById("valorTroco").value.trim();
 
 if (!nome || !tel || !end || !bairro || !formaPgto) {
-  alert("Preencha todos os campos!");
+  if (window.toast) {
+    toast.error('Preencha todos os campos obrigatórios!');
+  } else {
+    alert("Preencha todos os campos!");
+  }
   return;
 }
 
 // Corrigir o bairro digitado
 const corrigido = corrigirNomeBairro(bairro);
 if (!corrigido) {
-  alert("Bairro não encontrado. Escolha um bairro válido da lista.");
+  if (window.toast) {
+    toast.error('Bairro não encontrado. Escolha um bairro válido da lista.');
+  } else {
+    alert("Bairro não encontrado. Escolha um bairro válido da lista.");
+  }
   return;
 } else {
   bairro = corrigido;
