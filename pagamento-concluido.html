@@ -77,6 +77,16 @@
       background: #fff4dd;
       border-radius: 8px;
     }
+    .debug-info {
+      background: #f0f0f0;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      font-size: 12px;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   </style>
 </head>
 <body>
@@ -114,30 +124,33 @@
     const transactionNsu = urlParams.get('transaction_nsu');
     const captureMethod = urlParams.get('capture_method');
 
-    console.log("Parâmetros recebidos:", { receiptUrl, orderNsu, slug, transactionNsu, captureMethod });
-    console.log("Usando proxy CORS:", USE_CORS_PROXY);
+    console.log("📱 Parâmetros recebidos:", { receiptUrl, orderNsu, slug, transactionNsu, captureMethod });
+    console.log("🌐 Usando proxy CORS:", USE_CORS_PROXY);
 
     // Configuração Supabase
     const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+    // NÚMERO DO WHATSAPP CORRIGIDO
+    const WHATSAPP_NUMBER = '5595981229240'; // Formato: 55 + DDD + número
+
     async function verificarPagamento() {
       if (!orderNsu || !slug || !transactionNsu) {
         showError('Parâmetros de pagamento não encontrados.');
-        console.error("Parâmetros faltando:", { orderNsu, slug, transactionNsu });
+        console.error("❌ Parâmetros faltando:", { orderNsu, slug, transactionNsu });
         return;
       }
 
       try {
-        console.log("Verificando pagamento na API da InfinitePay...");
+        console.log("🔍 Verificando pagamento na API da InfinitePay...");
         
         // Usar proxy CORS se estiver em localhost
         const apiUrl = USE_CORS_PROXY 
           ? CORS_PROXY + encodeURIComponent('https://api.checkout.infinitepay.io/payment_check')
           : 'https://api.checkout.infinitepay.io/payment_check';
 
-        console.log("URL da API:", apiUrl);
+        console.log("📡 URL da API:", apiUrl);
         
         // Verificar status na API da InfinitePay
         const response = await fetch(apiUrl, {
@@ -154,10 +167,10 @@
         });
 
         const data = await response.json();
-        console.log("Resposta da InfinitePay:", data);
+        console.log("✅ Resposta da InfinitePay:", data);
 
         if (data.success && data.paid) {
-          console.log("Pagamento confirmado! Buscando pedido no Supabase...");
+          console.log("💰 Pagamento confirmado! Buscando pedido no Supabase...");
           
           // Pagamento confirmado - buscar pedido no Supabase
           const { data: pedido, error } = await supabaseClient
@@ -167,16 +180,22 @@
             .single();
 
           if (error) {
-            console.error('Erro ao buscar pedido:', error);
+            console.error('❌ Erro ao buscar pedido:', error);
             showError('Erro ao processar pedido.');
             return;
           }
 
-          console.log("Pedido encontrado:", pedido);
+          console.log("📦 Pedido encontrado:", pedido);
+          console.log("📍 Dados de entrega:", {
+            endereco: pedido.endereco,
+            bairro: pedido.bairro,
+            cep: pedido.cep,
+            observacao: pedido.observacao
+          });
 
           // Verificar se já foi enviado WhatsApp
           if (pedido.status_pagamento !== 'pago') {
-            console.log("Atualizando status do pedido para PAGO...");
+            console.log("🔄 Atualizando status do pedido para PAGO...");
             
             // Atualizar status no Supabase
             await supabaseClient
@@ -190,27 +209,27 @@
               })
               .eq('order_nsu', orderNsu);
 
-            console.log("Status atualizado. Enviando WhatsApp...");
+            console.log("✅ Status atualizado. Enviando WhatsApp...");
             
             // Enviar WhatsApp com status PAGAMENTO OK
             await enviarWhatsAppComPagamentoConfirmado(pedido, data);
           } else {
-            console.log("Pedido já estava marcado como pago. Não enviando WhatsApp novamente.");
+            console.log("ℹ️ Pedido já estava marcado como pago. Não enviando WhatsApp novamente.");
           }
 
           showSuccess(pedido, data);
         } else {
-          console.log("Pagamento ainda não confirmado:", data);
+          console.log("⏳ Pagamento ainda não confirmado:", data);
           showError('Pagamento ainda não confirmado. Por favor, aguarde.');
         }
       } catch (error) {
-        console.error('Erro ao verificar pagamento:', error);
+        console.error('❌ Erro ao verificar pagamento:', error);
         showError('Erro ao verificar pagamento. Tente novamente mais tarde.');
       }
     }
 
     async function enviarWhatsAppComPagamentoConfirmado(pedido, paymentData) {
-      console.log("Enviando WhatsApp com pagamento confirmado...");
+      console.log("📱 Enviando WhatsApp com pagamento confirmado...");
       
       // Recuperar itens do carrinho (estavam salvos no pedido)
       const itens = pedido.itens || [];
@@ -240,16 +259,24 @@ Tel: (95) 98122-9240
 *Novo Pedido | SENHA: ${pedido.senha}*
 ✅ *PAGAMENTO OK!*`;
       
+      // DADOS DE ENTREGA - VERIFICAR SE ESTÃO PREENCHIDOS
       let dadosCliente = `
 *Cliente:* ${pedido.nome}
 *Telefone:* ${pedido.tel}
-${pedido.email ? `*E-mail:* ${pedido.email}\n` : ""}*Endereço:* ${pedido.endereco}
-*Bairro:* ${pedido.bairro}
+${pedido.email ? `*E-mail:* ${pedido.email}\n` : ""}*Endereço:* ${pedido.endereco || 'NÃO INFORMADO'}
+*Bairro:* ${pedido.bairro || 'NÃO INFORMADO'}
 ${pedido.cep ? `*CEP:* ${pedido.cep}\n` : ""}*Forma de Pagamento:* ${formaPagamentoTexto}
 ------------------------------
 *Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}
 ------------------------------
 ${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
+
+      console.log("📍 Dados de entrega na mensagem:", {
+        endereco: pedido.endereco,
+        bairro: pedido.bairro,
+        cep: pedido.cep,
+        observacao: pedido.observacao
+      });
 
       let itensFormatados = "";
       const ordemCategorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
@@ -275,10 +302,22 @@ ${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
 
       let corpoPedido = `${cabecalho}\n${dadosCliente}\n\n*Itens:*\n${itensFormatados}${totalFormat}`;
 
-      console.log("Mensagem WhatsApp:", corpoPedido);
+      console.log("📝 Mensagem WhatsApp:", corpoPedido);
+      console.log("📞 Número do WhatsApp:", WHATSAPP_NUMBER);
 
-      let urlZap = "https://wa.me/5595981229240?text=" + encodeURIComponent(corpoPedido);
-      window.open(urlZap, "_blank");
+      // Criar URL do WhatsApp
+      let urlZap = `https://wa.me/${WHATSAPP_NUMBER}?text=` + encodeURIComponent(corpoPedido);
+      console.log("🔗 URL do WhatsApp:", urlZap);
+
+      // Tentar abrir em nova aba
+      try {
+        window.open(urlZap, "_blank");
+        console.log("✅ WhatsApp aberto com sucesso!");
+      } catch (e) {
+        console.error("❌ Erro ao abrir WhatsApp:", e);
+        // Fallback: abrir na mesma aba
+        window.location.href = urlZap;
+      }
     }
 
     function showSuccess(pedido, paymentData) {
@@ -305,6 +344,9 @@ ${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
         <h3>Detalhes do Pedido</h3>
         <p><strong>Senha:</strong> ${pedido.senha}</p>
         <p><strong>Nome:</strong> ${pedido.nome}</p>
+        <p><strong>Telefone:</strong> ${pedido.tel}</p>
+        <p><strong>Endereço:</strong> ${pedido.endereco || 'NÃO INFORMADO'}</p>
+        <p><strong>Bairro:</strong> ${pedido.bairro || 'NÃO INFORMADO'}</p>
         <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
         <p><strong>Forma de Pagamento:</strong> ${formaPagamentoTexto}</p>
         <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
