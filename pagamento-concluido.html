@@ -47,6 +47,21 @@
     .btn-home:hover {
       background: #e5630e;
     }
+    .btn-whatsapp {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 12px 30px;
+      background: #25D366;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-whatsapp:hover {
+      background: #128C7E;
+    }
     .spinner {
       border: 4px solid #f3f3f3;
       border-top: 4px solid #e5630e;
@@ -77,15 +92,43 @@
       background: #fff4dd;
       border-radius: 8px;
     }
-    .debug-info {
-      background: #f0f0f0;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      font-size: 12px;
+    .whatsapp-message {
       text-align: left;
-      max-height: 200px;
+      margin-top: 20px;
+      padding: 15px;
+      background: #e7f3ff;
+      border-radius: 8px;
+      border: 1px solid #b8daff;
+      font-family: monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
       overflow-y: auto;
+    }
+    .copy-btn {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 20px;
+      background: #007bff;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .copy-btn:hover {
+      background: #0056b3;
+    }
+    .warning-box {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      color: #856404;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
     }
   </style>
 </head>
@@ -99,7 +142,21 @@
       <h2 class="success">✅ Pagamento Confirmado!</h2>
       <p>Seu pedido foi processado com sucesso.</p>
       <a id="receipt-link" href="#" target="_blank" class="receipt-link">Ver Comprovante</a>
+      
+      <div class="warning-box">
+        <strong>⚠️ Importante:</strong> Se o WhatsApp não abriu automaticamente, clique no botão abaixo para enviar o pedido.
+      </div>
+      
+      <button id="btn-enviar-whatsapp" class="btn-whatsapp">📱 Enviar Pedido via WhatsApp</button>
+      
       <div id="order-details" class="order-details"></div>
+      
+      <div id="whatsapp-message-container" style="display:none;">
+        <h3 style="margin-top: 20px;">📝 Mensagem do Pedido</h3>
+        <div id="whatsapp-message" class="whatsapp-message"></div>
+        <button id="btn-copiar" class="copy-btn">📋 Copiar Mensagem</button>
+      </div>
+      
       <a href="index.html" class="btn-home">Voltar ao Início</a>
     </div>
     <div id="error" style="display:none;">
@@ -134,6 +191,9 @@
 
     // NÚMERO DO WHATSAPP CORRIGIDO
     const WHATSAPP_NUMBER = '5595981229240'; // Formato: 55 + DDD + número
+
+    // Variável global para armazenar a mensagem
+    let mensagemWhatsAppGlobal = '';
 
     async function verificarPagamento() {
       if (!orderNsu || !slug || !transactionNsu) {
@@ -214,7 +274,9 @@
             // Enviar WhatsApp com status PAGAMENTO OK
             await enviarWhatsAppComPagamentoConfirmado(pedido, data);
           } else {
-            console.log("ℹ️ Pedido já estava marcado como pago. Não enviando WhatsApp novamente.");
+            console.log("ℹ️ Pedido já estava marcado como pago. Gerando mensagem para envio manual...");
+            // Gerar mensagem mesmo se já estiver pago
+            await enviarWhatsAppComPagamentoConfirmado(pedido, data, false);
           }
 
           showSuccess(pedido, data);
@@ -228,8 +290,8 @@
       }
     }
 
-    async function enviarWhatsAppComPagamentoConfirmado(pedido, paymentData) {
-      console.log("📱 Enviando WhatsApp com pagamento confirmado...");
+    async function enviarWhatsAppComPagamentoConfirmado(pedido, paymentData, tentarAbrirAutomaticamente = true) {
+      console.log("📱 Preparando mensagem WhatsApp com pagamento confirmado...");
       
       // Recuperar itens do carrinho (estavam salvos no pedido)
       const itens = pedido.itens || [];
@@ -305,18 +367,42 @@ ${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
       console.log("📝 Mensagem WhatsApp:", corpoPedido);
       console.log("📞 Número do WhatsApp:", WHATSAPP_NUMBER);
 
+      // Armazenar mensagem globalmente
+      mensagemWhatsAppGlobal = corpoPedido;
+
+      // Mostrar mensagem na tela
+      document.getElementById('whatsapp-message').textContent = corpoPedido;
+      document.getElementById('whatsapp-message-container').style.display = 'block';
+
       // Criar URL do WhatsApp
       let urlZap = `https://wa.me/${WHATSAPP_NUMBER}?text=` + encodeURIComponent(corpoPedido);
       console.log("🔗 URL do WhatsApp:", urlZap);
 
-      // Tentar abrir em nova aba
-      try {
+      // Configurar botão manual
+      const btnEnviarWhatsApp = document.getElementById('btn-enviar-whatsapp');
+      btnEnviarWhatsApp.onclick = function() {
+        console.log("📱 Botão manual clicado. Abrindo WhatsApp...");
         window.open(urlZap, "_blank");
-        console.log("✅ WhatsApp aberto com sucesso!");
-      } catch (e) {
-        console.error("❌ Erro ao abrir WhatsApp:", e);
-        // Fallback: abrir na mesma aba
-        window.location.href = urlZap;
+      };
+
+      // Tentar abrir automaticamente apenas se for a primeira vez
+      if (tentarAbrirAutomaticamente) {
+        console.log("🚀 Tentando abrir WhatsApp automaticamente...");
+        // Pequeno delay para garantir que o navegador não bloqueie
+        setTimeout(() => {
+          try {
+            const novaJanela = window.open(urlZap, "_blank");
+            if (novaJanela) {
+              console.log("✅ WhatsApp aberto com sucesso!");
+            } else {
+              console.warn("⚠️ Popup bloqueado pelo navegador. Usuário deve clicar no botão manual.");
+              alert("⚠️ O popup do WhatsApp foi bloqueado pelo navegador.\n\nPor favor, clique no botão 'Enviar Pedido via WhatsApp' abaixo.");
+            }
+          } catch (e) {
+            console.error("❌ Erro ao abrir WhatsApp:", e);
+            alert("⚠️ Ocorreu um erro ao abrir o WhatsApp automaticamente.\n\nPor favor, clique no botão 'Enviar Pedido via WhatsApp' abaixo.");
+          }
+        }, 500);
       }
     }
 
@@ -358,6 +444,16 @@ ${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
       document.getElementById('error').style.display = 'block';
       document.getElementById('error-message').textContent = message;
     }
+
+    // Botão de copiar mensagem
+    document.getElementById('btn-copiar').addEventListener('click', function() {
+      navigator.clipboard.writeText(mensagemWhatsAppGlobal).then(function() {
+        alert('✅ Mensagem copiada para a área de transferência!');
+      }, function(err) {
+        console.error('❌ Erro ao copiar:', err);
+        alert('❌ Erro ao copiar mensagem. Tente selecionar e copiar manualmente.');
+      });
+    });
 
     // Verificar pagamento ao carregar a página
     verificarPagamento();
