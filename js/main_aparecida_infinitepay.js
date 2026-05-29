@@ -1,6 +1,10 @@
 // --- FINALIZAÇÃO / ENVIO PARA INFINITEPAY ---
 // Este arquivo substitui a função de envio do pedido para integrar com a InfinitePay
 
+// Proxy CORS para testes locais (Dyad)
+const USE_CORS_PROXY = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const CORS_PROXY = 'https://corsproxy.io/?';
+
 document.addEventListener('DOMContentLoaded', function () {
   const enviarButton = document.getElementById("btn-enviar-pedido");
   if (enviarButton) {
@@ -76,6 +80,7 @@ document.addEventListener('DOMContentLoaded', function () {
       };
 
       console.log("🔗 URL de Redirecionamento:", redirectUrl);
+      console.log("🌐 Usando proxy CORS:", USE_CORS_PROXY);
 
       // Salvar pedido no Supabase antes de redirecionar
       try {
@@ -129,8 +134,10 @@ document.addEventListener('DOMContentLoaded', function () {
         console.log("Criando checkout na InfinitePay...");
         console.log("Payload para InfinitePay:", JSON.stringify(payloadInfinitePay, null, 2));
 
-        // URL direta da API da InfinitePay (sem proxy CORS para produção)
-        const apiUrl = 'https://api.checkout.infinitepay.io/links';
+        // Usar proxy CORS se estiver em localhost
+        const apiUrl = USE_CORS_PROXY 
+          ? CORS_PROXY + encodeURIComponent('https://api.checkout.infinitepay.io/links')
+          : 'https://api.checkout.infinitepay.io/links';
 
         console.log("URL da API:", apiUrl);
 

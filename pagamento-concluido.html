@@ -169,6 +169,10 @@
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
+    // Proxy CORS para testes locais (Dyad)
+    const USE_CORS_PROXY = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const CORS_PROXY = 'https://corsproxy.io/?';
+
     // Obter parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
     const receiptUrl = urlParams.get('receipt_url');
@@ -178,6 +182,7 @@
     const captureMethod = urlParams.get('capture_method');
 
     console.log("📱 Parâmetros recebidos:", { receiptUrl, orderNsu, slug, transactionNsu, captureMethod });
+    console.log("🌐 Usando proxy CORS:", USE_CORS_PROXY);
 
     // Configuração Supabase
     const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
@@ -200,8 +205,10 @@
       try {
         console.log("🔍 Verificando pagamento na API da InfinitePay...");
         
-        // URL direta da API da InfinitePay (sem proxy CORS para produção)
-        const apiUrl = 'https://api.checkout.infinitepay.io/payment_check';
+        // Usar proxy CORS se estiver em localhost
+        const apiUrl = USE_CORS_PROXY 
+          ? CORS_PROXY + encodeURIComponent('https://api.checkout.infinitepay.io/payment_check')
+          : 'https://api.checkout.infinitepay.io/payment_check';
 
         console.log("📡 URL da API:", apiUrl);
         
