@@ -169,10 +169,6 @@
 
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script>
-    // Proxy CORS para testes locais
-    const USE_CORS_PROXY = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const CORS_PROXY = 'https://corsproxy.io/?';
-
     // Obter parâmetros da URL
     const urlParams = new URLSearchParams(window.location.search);
     const receiptUrl = urlParams.get('receipt_url');
@@ -182,14 +178,13 @@
     const captureMethod = urlParams.get('capture_method');
 
     console.log("📱 Parâmetros recebidos:", { receiptUrl, orderNsu, slug, transactionNsu, captureMethod });
-    console.log("🌐 Usando proxy CORS:", USE_CORS_PROXY);
 
     // Configuração Supabase
     const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
     const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-    // NÚMERO DO WHATSAPP CORRIGIDO
+    // NÚMERO DO WHATSAPP
     const WHATSAPP_NUMBER = '5595981229240'; // Formato: 55 + DDD + número
 
     // Variável global para armazenar a mensagem
@@ -205,10 +200,8 @@
       try {
         console.log("🔍 Verificando pagamento na API da InfinitePay...");
         
-        // Usar proxy CORS se estiver em localhost
-        const apiUrl = USE_CORS_PROXY 
-          ? CORS_PROXY + encodeURIComponent('https://api.checkout.infinitepay.io/payment_check')
-          : 'https://api.checkout.infinitepay.io/payment_check';
+        // URL direta da API da InfinitePay (sem proxy CORS para produção)
+        const apiUrl = 'https://api.checkout.infinitepay.io/payment_check';
 
         console.log("📡 URL da API:", apiUrl);
         
@@ -321,7 +314,7 @@ Tel: (95) 98122-9240
 *Novo Pedido | SENHA: ${pedido.senha}*
 ✅ *PAGAMENTO OK!*`;
       
-      // DADOS DE ENTREGA - VERIFICAR SE ESTÃO PREENCHIDOS
+      // DADOS DE ENTREGA
       let dadosCliente = `
 *Cliente:* ${pedido.nome}
 *Telefone:* ${pedido.tel}

@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meus Pedidos - Empório das Coxinhas</title>
+  <link rel="icon" href="assets/img/favicon.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <style>
+    body {
+      padding: 20px;
+      background: #fff8f0;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #e5630e;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+    .search-box input {
+      flex: 1;
+      padding: 12px;
+      border: 2px solid #ffd49a;
+      border-radius: 8px;
+      font-size: 16px;
+      min-width: 200px;
+    }
+    .search-box button {
+      padding: 12px 30px;
+      background: #ff8800;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .search-box button:hover {
+      background: #e5630e;
+    }
+    .pedido-card {
+      background: #fff4dd;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 5px solid #ff8800;
+    }
+    .pedido-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .senha {
+      font-size: 24px;
+      font-weight: bold;
+      color: #e5630e;
+    }
+    .status {
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    .status.pago {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.pendente {
+      background: #fff3cd;
+      color: #856404;
+    }
+    .pedido-info {
+      margin-bottom: 15px;
+    }
+    .pedido-info p {
+      margin: 5px 0;
+      color: #43270a;
+    }
+    .pedido-itens {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+    .pedido-itens h4 {
+      margin: 0 0 10px 0;
+      color: #e5630e;
+    }
+    .item {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      border-bottom: 1px solid #eee;
+    }
+    .item:last-child {
+      border-bottom: none;
+    }
+    .total {
+      font-size: 20px;
+      font-weight: bold;
+      color: #e5630e;
+      text-align: right;
+    }
+    .no-pedidos {
+      text-align: center;
+      padding: 40px;
+      color: #888;
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #e5630e;
+    }
+    .back-btn {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background: #ff8800;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+    .back-btn:hover {
+      background: #e5630e;
+    }
+    @media (max-width: 600px) {
+      .container {
+        padding: 20px;
+      }
+      .pedido-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-btn">← Voltar ao Início</a>
+    <h1>📦 Meus Pedidos</h1>
+    
+    <div class="search-box">
+      <input type="tel" id="telefone" placeholder="Digite seu telefone (ex: (95) 98123-4567)" maxlength="15">
+      <button onclick="buscarPedidos()">Buscar Pedidos</button>
+    </div>
+    
+    <div id="resultados"></div>
+  </div>
+
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script>
+    // Configuração Supabase
+    const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+    // Máscara de telefone
+    const telInput = document.getElementById('telefone');
+    if (telInput) {
+      telInput.addEventListener('input', function(e) {
+        let v = this.value.replace(/\D/g, '');
+        if (v.length > 11) v = v.slice(0, 11);
+        if (v.length > 0) v = '(' + v;
+        if (v.length > 3) v = v.slice(0, 3) + ') ' + v.slice(3);
+        if (v.length > 10) v = v.slice(0, 10) + '-' + v.slice(10);
+        this.value = v;
+      });
+    }
+
+    async function buscarPedidos() {
+      const telefone = document.getElementById('telefone').value.trim();
+      const resultadosDiv = document.getElementById('resultados');
+
+      if (!telefone) {
+        alert('Por favor, digite seu telefone.');
+        return;
+      }
+
+      // Mostrar loading
+      resultadosDiv.innerHTML = '<div class="loading">🔍 Buscando pedidos...</div>';
+
+      try {
+        // Buscar pedidos pelo telefone
+        const { data: pedidos, error } = await supabaseClient
+          .from('pedidos_aparecida')
+          .select('*')
+          .eq('tel', telefone)
+          .order('criado_em', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        console.log('Pedidos encontrados:', pedidos);
+
+        if (!pedidos || pedidos.length === 0) {
+          resultadosDiv.innerHTML = `
+            <div class="no-pedidos">
+              <h3>😕 Nenhum pedido encontrado</h3>
+              <p>Não encontramos pedidos para o telefone: <strong>${telefone}</strong></p>
+              <p>Verifique se o número está correto ou faça um novo pedido.</p>
+            </div>
+          `;
+          return;
+        }
+
+        // Renderizar pedidos
+        let html = '';
+        pedidos.forEach(pedido => {
+          const dataCriacao = new Date(pedido.criado_em).toLocaleString('pt-BR');
+          const statusClass = pedido.status_pagamento === 'pago' ? 'pago' : 'pendente';
+          const statusTexto = pedido.status_pagamento === 'pago' ? '✅ PAGO' : '⏳ PENDENTE';
+
+          // Renderizar itens
+          let itensHtml = '';
+          if (pedido.itens && Array.isArray(pedido.itens)) {
+            pedido.itens.forEach(item => {
+              itensHtml += `
+                <div class="item">
+                  <span>${item.nome}</span>
+                  <span>R$ ${item.preco.toFixed(2)}</span>
+                </div>
+              `;
+            });
+          }
+
+          // Adicionar taxa de entrega
+          if (pedido.taxa_entrega > 0) {
+            itensHtml += `
+              <div class="item">
+                <span>Taxa de Entrega</span>
+                <span>R$ ${pedido.taxa_entrega.toFixed(2)}</span>
+              </div>
+            `;
+          }
+
+          html += `
+            <div class="pedido-card">
+              <div class="pedido-header">
+                <div>
+                  <span class="senha">Senha: ${pedido.senha}</span>
+                  <small style="color: #888;">${dataCriacao}</small>
+                </div>
+                <span class="status ${statusClass}">${statusTexto}</span>
+              </div>
+              
+              <div class="pedido-info">
+                <p><strong>👤 Cliente:</strong> ${pedido.nome}</p>
+                <p><strong>📍 Endereço:</strong> ${pedido.endereco || 'NÃO INFORMADO'}, ${pedido.bairro || 'NÃO INFORMADO'}</p>
+                <p><strong>💳 Pagamento:</strong> ${pedido.forma_pagamento}</p>
+                ${pedido.observacao ? `<p><strong>📝 Obs:</strong> ${pedido.observacao}</p>` : ''}
+              </div>
+              
+              <div class="pedido-itens">
+                <h4>📦 Itens do Pedido</h4>
+                ${itensHtml}
+              </div>
+              
+              <div class="total">
+                Total: R$ ${pedido.total.toFixed(2)}
+              </div>
+            </div>
+          `;
+        });
+
+        resultadosDiv.innerHTML = html;
+
+      } catch (error) {
+        console.error('Erro ao buscar pedidos:', error);
+        resultadosDiv.innerHTML = `
+          <div class="no-pedidos">
+            <h3>❌ Erro ao buscar pedidos</h3>
+            <p>Ocorreu um erro ao tentar buscar seus pedidos.</p>
+            <p>Erro: ${error.message}</p>
+            <button onclick="buscarPedidos()" style="margin-top: 10px; padding: 10px 20px; background: #ff8800; color: white; border: none; border-radius: 8px; cursor: pointer;">Tentar Novamente</button>
+          </div>
+        `;
+      }
+    }
+
+    // Buscar pedidos ao pressionar Enter
+    document.getElementById('telefone').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        buscarPedidos();
+      }
+    });
+  </script>
+</body>
+</html>
