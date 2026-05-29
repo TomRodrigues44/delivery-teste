@@ -63,11 +63,14 @@ document.addEventListener('DOMContentLoaded', function () {
         description: "Taxa de Entrega"
       });
 
+      // URL dinâmica de redirecionamento (funciona tanto no Dyad quanto na VPS)
+      const redirectUrl = window.location.origin + "/pagamento-concluido.html";
+
       // Preparar payload para a InfinitePay (SEM ENDEREÇO - passo de entrega não será mostrado)
       const payloadInfinitePay = {
         handle: "emporiodascoxinhas1",
         order_nsu: orderNsu,
-        redirect_url: "https://delivery-aparecida.emporiodascoxinhas.com.br/pagamento-concluido.html",
+        redirect_url: redirectUrl,
         customer: {
           name: nome,
           phone_number: tel.replace(/\D/g, '').length === 11 ? '+55' + tel.replace(/\D/g, '') : '+55' + '9' + tel.replace(/\D/g, ''),
@@ -75,6 +78,8 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         items: itemsInfinitePay
       };
+
+      console.log("🔗 URL de Redirecionamento:", redirectUrl);
 
       // Salvar pedido no Supabase antes de redirecionar
       try {
