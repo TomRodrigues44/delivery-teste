@@ -110,6 +110,8 @@
     const transactionNsu = urlParams.get('transaction_nsu');
     const captureMethod = urlParams.get('capture_method');
 
+    console.log("Parâmetros recebidos:", { receiptUrl, orderNsu, slug, transactionNsu, captureMethod });
+
     // Configuração Supabase
     const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
@@ -118,10 +120,13 @@
     async function verificarPagamento() {
       if (!orderNsu || !slug || !transactionNsu) {
         showError('Parâmetros de pagamento não encontrados.');
+        console.error("Parâmetros faltando:", { orderNsu, slug, transactionNsu });
         return;
       }
 
       try {
+        console.log("Verificando pagamento na API da InfinitePay...");
+        
         // Verificar status na API da InfinitePay
         const response = await fetch('https://api.checkout.infinitepay.io/payment_check', {
           method: 'POST',
@@ -137,8 +142,11 @@
         });
 
         const data = await response.json();
+        console.log("Resposta da InfinitePay:", data);
 
         if (data.success && data.paid) {
+          console.log("Pagamento confirmado! Buscando pedido no Supabase...");
+          
           // Pagamento confirmado - buscar pedido no Supabase
           const { data: pedido, error } = await supabase
             .from('pedidos_aparecida')
@@ -152,8 +160,12 @@
             return;
           }
 
+          console.log("Pedido encontrado:", pedido);
+
           // Verificar se já foi enviado WhatsApp
           if (pedido.status_pagamento !== 'pago') {
+            console.log("Atualizando status do pedido para PAGO...");
+            
             // Atualizar status no Supabase
             await supabase
               .from('pedidos_aparecida')
@@ -166,12 +178,17 @@
               })
               .eq('order_nsu', orderNsu);
 
+            console.log("Status atualizado. Enviando WhatsApp...");
+            
             // Enviar WhatsApp com status PAGAMENTO OK
             await enviarWhatsAppComPagamentoConfirmado(pedido, data);
+          } else {
+            console.log("Pedido já estava marcado como pago. Não enviando WhatsApp novamente.");
           }
 
           showSuccess(pedido, data);
         } else {
+          console.log("Pagamento ainda não confirmado:", data);
           showError('Pagamento ainda não confirmado. Por favor, aguarde.');
         }
       } catch (error) {
@@ -181,6 +198,8 @@
     }
 
     async function enviarWhatsAppComPagamentoConfirmado(pedido, paymentData) {
+      console.log("Enviando WhatsApp com pagamento confirmado...");
+      
       // Recuperar itens do carrinho (estavam salvos no pedido)
       const itens = pedido.itens || [];
 
@@ -191,19 +210,34 @@
         agrupados[item.categoria].push(item);
       });
 
-      let cabecalho = `*Empório das Coxinhas - Aparecida*\nAv. Santos Dumont n 1064-A, Aparecida\nCNPJ: 27.099.732/0001-37\nTel: (95) 99155-0102\n========================\n*Novo Pedido | SENHA: ${pedido.senha}*\n✅ *PAGAMENTO OK!*`;
+      // Determinar forma de pagamento baseada no capture_method
+      let formaPagamentoTexto = "Online";
+      if (captureMethod === 'credit_card') {
+        formaPagamentoTexto = "Cartão de Crédito";
+      } else if (captureMethod === 'debit_card') {
+        formaPagamentoTexto = "Cartão de Débito";
+      } else if (captureMethod === 'pix') {
+        formaPagamentoTexto = "PIX";
+      }
+
+      let cabecalho = `*Empório das Coxinhas - Aparecida*
+Av. Santos Dumont n 1064-A, Aparecida
+CNPJ: 27.099.732/0001-37
+Tel: (95) 99155-0102
+========================
+*Novo Pedido | SENHA: ${pedido.senha}*
+✅ *PAGAMENTO OK!*`;
       
-            // Determinar forma de pagamento baseada no capture_method
-            let formaPagamentoTexto = "Online";
-            if (captureMethod === 'credit_card') {
-              formaPagamentoTexto = "Cartão de Crédito";
-            } else if (captureMethod === 'debit_card') {
-              formaPagamentoTexto = "Cartão de Débito";
-            } else if (captureMethod === 'pix') {
-              formaPagamentoTexto = "PIX";
-            }
-      
-            let dadosCliente = `\n*Cliente:* ${pedido.nome}\n*Telefone:* ${pedido.tel}\n${pedido.email ? `*E-mail:* ${pedido.email}\n` : ""}*Endereço:* ${pedido.endereco}\n*Bairro:* ${pedido.bairro}\n${pedido.cep ? `*CEP:* ${pedido.cep}\n` : ""}*Forma de Pagamento:* ${formaPagamentoTexto}\n------------------------------\n*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}\n------------------------------\n${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
+      let dadosCliente = `
+*Cliente:* ${pedido.nome}
+*Telefone:* ${pedido.tel}
+${pedido.email ? `*E-mail:* ${pedido.email}\n` : ""}*Endereço:* ${pedido.endereco}
+*Bairro:* ${pedido.bairro}
+${pedido.cep ? `*CEP:* ${pedido.cep}\n` : ""}*Forma de Pagamento:* ${formaPagamentoTexto}
+------------------------------
+*Taxa de entrega:* R$ ${pedido.taxa_entrega.toFixed(2)}
+------------------------------
+${pedido.observacao ? `*Observações:* ${pedido.observacao}` : ""}`;
 
       let itensFormatados = "";
       const ordemCategorias = ['salgados', 'bolos', 'brigadeiros', 'bebidas'];
@@ -229,6 +263,8 @@
 
       let corpoPedido = `${cabecalho}\n${dadosCliente}\n\n*Itens:*\n${itensFormatados}${totalFormat}`;
 
+      console.log("Mensagem WhatsApp:", corpoPedido);
+
       let urlZap = "https://wa.me/5595991550102?text=" + encodeURIComponent(corpoPedido);
       window.open(urlZap, "_blank");
     }
@@ -241,16 +277,26 @@
         document.getElementById('receipt-link').href = receiptUrl;
       }
 
+      // Determinar forma de pagamento
+      let formaPagamentoTexto = "Online";
+      if (captureMethod === 'credit_card') {
+        formaPagamentoTexto = "Cartão de Crédito";
+      } else if (captureMethod === 'debit_card') {
+        formaPagamentoTexto = "Cartão de Débito";
+      } else if (captureMethod === 'pix') {
+        formaPagamentoTexto = "PIX";
+      }
+
       // Mostrar detalhes do pedido
-            const detailsDiv = document.getElementById('order-details');
-            detailsDiv.innerHTML = `
-              <h3>Detalhes do Pedido</h3>
-              <p><strong>Senha:</strong> ${pedido.senha}</p>
-              <p><strong>Nome:</strong> ${pedido.nome}</p>
-              <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
-              <p><strong>Forma de Pagamento:</strong> ${formaPagamentoTexto}</p>
-              <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
-            `;
+      const detailsDiv = document.getElementById('order-details');
+      detailsDiv.innerHTML = `
+        <h3>Detalhes do Pedido</h3>
+        <p><strong>Senha:</strong> ${pedido.senha}</p>
+        <p><strong>Nome:</strong> ${pedido.nome}</p>
+        <p><strong>Total:</strong> R$ ${pedido.total.toFixed(2)}</p>
+        <p><strong>Forma de Pagamento:</strong> ${formaPagamentoTexto}</p>
+        <p><strong>ID da Transação:</strong> ${transactionNsu}</p>
+      `;
     }
 
     function showError(message) {
