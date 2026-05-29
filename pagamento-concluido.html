@@ -115,7 +115,7 @@
     // Configuração Supabase
     const supabaseUrl = 'https://jlvumlkiecvmtldmgntl.supabase.co';
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpsdnVtbGtpZWN2bXRsZG1nbnRsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTAyMTk1ODcsImV4cCI6MjA2NTc5NTU4N30.o73mLA9EIdKYNDjAzDi2ENVi90JbCiOJMPnMIWRq-fw';
-    const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
     async function verificarPagamento() {
       if (!orderNsu || !slug || !transactionNsu) {
@@ -148,7 +148,7 @@
           console.log("Pagamento confirmado! Buscando pedido no Supabase...");
           
           // Pagamento confirmado - buscar pedido no Supabase
-          const { data: pedido, error } = await supabase
+          const { data: pedido, error } = await supabaseClient
             .from('pedidos_aparecida')
             .select('*')
             .eq('order_nsu', orderNsu)
@@ -167,7 +167,7 @@
             console.log("Atualizando status do pedido para PAGO...");
             
             // Atualizar status no Supabase
-            await supabase
+            await supabaseClient
               .from('pedidos_aparecida')
               .update({
                 status_pagamento: 'pago',
