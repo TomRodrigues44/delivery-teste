@@ -159,6 +159,14 @@
       background: #f8d7da;
       color: #721c24;
     }
+    .info-box {
+      background: #e7f3ff;
+      border: 1px solid #b8daff;
+      color: #004085;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
@@ -173,6 +181,10 @@
       <a id="receipt-link" href="#" target="_blank" class="receipt-link">Ver Comprovante</a>
       
       <div id="email-status"></div>
+      
+      <div id="info-email" class="info-box" style="display:none;">
+        <strong>ℹ️ Informação:</strong> Este pedido já foi processado anteriormente. O email de confirmação não foi enviado automaticamente nesta visita. Clique no botão abaixo para reenviar.
+      </div>
       
       <div class="warning-box">
         <strong>⚠️ Importante:</strong> Se o WhatsApp não abriu automaticamente, clique no botão abaixo para enviar o pedido.
@@ -399,6 +411,8 @@
             await enviarEmailConfirmacao(pedido);
           } else {
             console.log("ℹ️ Pedido já estava marcado como pago. Gerando mensagem para envio manual...");
+            // Mostrar mensagem informativa
+            document.getElementById('info-email').style.display = 'block';
             // Gerar mensagem mesmo se já estiver pago
             await enviarWhatsAppComPagamentoConfirmado(pedido, data, false);
             // NÃO envia email automaticamente se já estiver pago
